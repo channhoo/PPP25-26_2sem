@@ -1,13 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Optional, Set
 
-# --- Константы и Типы ---
-Color = str  # 'white' или 'black'
-Position = Tuple[int, int]  # (row, col) от 0 до 7
+Color = str
+Position = Tuple[int, int]
 
-# =============================================================================
-# 1. ИЕРАРХИЯ ФИГУР (Полиморфизм и Наследование)
-# =============================================================================
 
 class Piece(ABC):
     """Базовый класс для всех игровых фигур"""
@@ -16,11 +12,11 @@ class Piece(ABC):
         self._position = position
 
     @property
-    def color(self) -> Color:
+    def color(self):
         return self._color
 
     @property
-    def position(self) -> Position:
+    def position(self):
         return self._position
 
     @position.setter
@@ -28,12 +24,12 @@ class Piece(ABC):
         self._position = value
 
     @abstractmethod
-    def get_symbol(self) -> str:
+    def get_symbol(self):
         """Возвращает символ фигуры для отображения"""
         pass
 
     @abstractmethod
-    def get_possible_moves(self, board: 'Board') -> List[Position]:
+    def get_possible_moves(self, board: 'Board'):
         """Возвращает список допустимых координат для хода (геометрия)"""
         pass
 
@@ -41,26 +37,21 @@ class Piece(ABC):
         return self.get_symbol()
 
 
-# --- Шахматные фигуры ---
-
 class Pawn(Piece):
-    def get_symbol(self) -> str:
+    def get_symbol(self):
         return 'P' if self.color == 'white' else 'p'
 
-    def get_possible_moves(self, board: 'Board') -> List[Position]:
+    def get_possible_moves(self, board: 'Board'):
         moves = []
         r, c = self.position
         direction = -1 if self.color == 'white' else 1
         start_row = 6 if self.color == 'white' else 1
 
-        # Ход вперёд на 1 клетку
         if board.is_empty((r + direction, c)):
             moves.append((r + direction, c))
-            # Ход вперёд на 2 клетки (ТОЛЬКО со стартовой позиции)
             if r == start_row and board.is_empty((r + 2 * direction, c)):
                 moves.append((r + 2 * direction, c))
         
-        # Взятие по диагонали (только одна фигура за ход)
         for dc in [-1, 1]:
             target = (r + direction, c + dc)
             if board.is_within_bounds(target):
@@ -71,13 +62,13 @@ class Pawn(Piece):
 
 
 class Rook(Piece):
-    def get_symbol(self) -> str:
+    def get_symbol(self):
         return 'R' if self.color == 'white' else 'r'
 
-    def get_possible_moves(self, board: 'Board') -> List[Position]:
+    def get_possible_moves(self, board: 'Board'):
         return self._get_sliding_moves(board, [(0, 1), (0, -1), (1, 0), (-1, 0)])
 
-    def _get_sliding_moves(self, board: 'Board', directions: List[Tuple[int, int]]) -> List[Position]:
+    def _get_sliding_moves(self, board: 'Board', directions: List[Tuple[int, int]]):
         moves = []
         r, c = self.position
         for dr, dc in directions:
@@ -96,10 +87,10 @@ class Rook(Piece):
 
 
 class Knight(Piece):
-    def get_symbol(self) -> str:
+    def get_symbol(self):
         return 'N' if self.color == 'white' else 'n'
 
-    def get_possible_moves(self, board: 'Board') -> List[Position]:
+    def get_possible_moves(self, board: 'Board'):
         moves = []
         r, c = self.position
         offsets = [(2,1),(2,-1),(-2,1),(-2,-1),(1,2),(1,-2),(-1,2),(-1,-2)]
@@ -113,13 +104,13 @@ class Knight(Piece):
 
 
 class Bishop(Piece):
-    def get_symbol(self) -> str:
+    def get_symbol(self):
         return 'B' if self.color == 'white' else 'b'
 
-    def get_possible_moves(self, board: 'Board') -> List[Position]:
+    def get_possible_moves(self, board: 'Board'):
         return self._get_sliding_moves(board, [(1,1),(1,-1),(-1,1),(-1,-1)])
     
-    def _get_sliding_moves(self, board: 'Board', directions: List[Tuple[int, int]]) -> List[Position]:
+    def _get_sliding_moves(self, board: 'Board', directions: List[Tuple[int, int]]):
         moves = []
         r, c = self.position
         for dr, dc in directions:
@@ -138,10 +129,10 @@ class Bishop(Piece):
 
 
 class Queen(Piece):
-    def get_symbol(self) -> str:
+    def get_symbol(self):
         return 'Q' if self.color == 'white' else 'q'
 
-    def get_possible_moves(self, board: 'Board') -> List[Position]:
+    def get_possible_moves(self, board: 'Board'):
         moves = []
         directions = [(0,1),(0,-1),(1,0),(-1,0),(1,1),(1,-1),(-1,1),(-1,-1)]
         r, c = self.position
@@ -161,10 +152,10 @@ class Queen(Piece):
 
 
 class King(Piece):
-    def get_symbol(self) -> str:
+    def get_symbol(self):
         return 'K' if self.color == 'white' else 'k'
 
-    def get_possible_moves(self, board: 'Board') -> List[Position]:
+    def get_possible_moves(self, board: 'Board'):
         moves = []
         r, c = self.position
         for dr in [-1, 0, 1]:
@@ -179,25 +170,21 @@ class King(Piece):
         return moves
 
 
-# --- Шашечные фигуры (упрощённая версия) ---
-
 class Checker(Piece):
     """Обычная шашка: ходит и бьёт по диагонали вперёд, без дамок"""
-    def get_symbol(self) -> str:
+    def get_symbol(self):
         return 'O' if self.color == 'white' else 'o'
 
-    def get_possible_moves(self, board: 'Board') -> List[Position]:
+    def get_possible_moves(self, board: 'Board'):
         moves = []
         r, c = self.position
         direction = -1 if self.color == 'white' else 1
         
-        # Обычный ход на 1 клетку по диагонали вперёд
         for dc in [-1, 1]:
             target = (r + direction, c + dc)
             if board.is_within_bounds(target) and board.is_empty(target):
                 moves.append(target)
         
-        # Взятие: прыжок через вражескую шашку
         for dc in [-1, 1]:
             jump_target = (r + 2 * direction, c + 2 * dc)
             mid_target = (r + direction, c + dc)
@@ -209,29 +196,21 @@ class Checker(Piece):
         return moves
 
 
-# =============================================================================
-# 2. КЛАСС ХОДА (Для системы отката)
-# =============================================================================
-
 class Move:
     """Объект, описывающий один сделанный ход"""
     def __init__(self, piece: Piece, start: Position, end: Position, captured: Optional[Piece]):
         self.piece = piece
         self.start = start
         self.end = end
-        self.captured = captured  # Съеденная фигура (если была)
+        self.captured = captured
 
     def __str__(self):
         capture_mark = "x" if self.captured else "-"
         return f"{self.piece.get_symbol()}{capture_mark}{self._pos_to_str(self.end)}"
     
-    def _pos_to_str(self, pos: Position) -> str:
+    def _pos_to_str(self, pos: Position):
         return f"{chr(97 + pos[1])}{8 - pos[0]}"
 
-
-# =============================================================================
-# 3. КЛАСС ДОСКИ (Инкапсуляция состояния)
-# =============================================================================
 
 class Board:
     """Базовый класс игровой доски 8x8"""
@@ -242,15 +221,15 @@ class Board:
         """Переопределяется в наследниках для расстановки фигур"""
         pass
 
-    def is_within_bounds(self, pos: Position) -> bool:
+    def is_within_bounds(self, pos: Position):
         return 0 <= pos[0] < 8 and 0 <= pos[1] < 8
 
-    def get_piece(self, pos: Position) -> Optional[Piece]:
+    def get_piece(self, pos: Position):
         if not self.is_within_bounds(pos):
             return None
         return self._grid[pos[0]][pos[1]]
 
-    def is_empty(self, pos: Position) -> bool:
+    def is_empty(self, pos: Position):
         return self.get_piece(pos) is None
 
     def set_piece(self, pos: Position, piece: Optional[Piece]):
@@ -259,7 +238,7 @@ class Board:
             if piece:
                 piece.position = pos
 
-    def find_king(self, color: Color) -> Optional[Position]:
+    def find_king(self, color: Color):
         """Находит короля указанного цвета (для шахмат)"""
         for r in range(8):
             for c in range(8):
@@ -268,7 +247,7 @@ class Board:
                     return (r, c)
         return None
 
-    def is_square_attacked(self, pos: Position, by_color: Color) -> bool:
+    def is_square_attacked(self, pos: Position, by_color: Color):
         """Проверяет, атакует ли фигура цвета by_color клетку pos"""
         for r in range(8):
             for c in range(8):
@@ -278,7 +257,7 @@ class Board:
                         return True
         return False
 
-    def is_check(self, color: Color) -> bool:
+    def is_check(self, color: Color):
         """Проверяет, находится ли король цвета color под шахом"""
         king_pos = self.find_king(color)
         if not king_pos:
@@ -286,7 +265,7 @@ class Board:
         enemy_color = 'black' if color == 'white' else 'white'
         return self.is_square_attacked(king_pos, enemy_color)
 
-    def get_threatened_positions(self, my_color: Color) -> Set[Position]:
+    def get_threatened_positions(self, my_color: Color):
         """Возвращает множество клеток, находящихся под ударом врага"""
         threatened = set()
         enemy_color = 'black' if my_color == 'white' else 'white'
@@ -317,14 +296,14 @@ class Board:
                                        and self.is_check(piece.color))
                     
                     if is_king_in_check:
-                        print(f"!{symbol}!|", end="")  # Шах!
+                        print(f"!{symbol}!|", end="")
                     elif is_threatened:
-                        print(f"[{symbol}]|", end="")  # Под боем
+                        print(f"[{symbol}]|", end="")
                     else:
                         print(f" {symbol} |", end="")
                 else:
                     if (r, c) in threatened_squares:
-                        print(" * |", end="")  # Пустая клетка под ударом
+                        print(" * |", end="")
                     else:
                         print("   |", end="")
             print(f" {8 - r}")
@@ -336,7 +315,6 @@ class Board:
 class ChessBoard(Board):
     """Доска для шахмат с классической расстановкой"""
     def _setup_initial_position(self):
-        # Белые фигуры (ряды 6-7, индексы)
         for c in range(8):
             self._grid[6][c] = Pawn('white', (6, c))
         
@@ -349,7 +327,6 @@ class ChessBoard(Board):
         self._grid[7][6] = Knight('white', (7, 6))
         self._grid[7][7] = Rook('white', (7, 7))
 
-        # Чёрные фигуры (ряды 0-1)
         for c in range(8):
             self._grid[1][c] = Pawn('black', (1, c))
         
@@ -366,22 +343,16 @@ class ChessBoard(Board):
 class CheckersBoard(Board):
     """Доска для упрощённых шашек"""
     def _setup_initial_position(self):
-        # Чёрные шашки (верх, ряды 0-2) — только на тёмных клетках
         for r in range(3):
             for c in range(8):
-                if (r + c) % 2 == 1:  # Тёмные клетки
+                if (r + c) % 2 == 1:
                     self._grid[r][c] = Checker('black', (r, c))
         
-        # Белые шашки (низ, ряды 5-7) — только на тёмных клетках
         for r in range(5, 8):
             for c in range(8):
                 if (r + c) % 2 == 1:
                     self._grid[r][c] = Checker('white', (r, c))
 
-
-# =============================================================================
-# 4. КОНТРОЛЛЕР ИГРЫ (Логика, валидация, история)
-# =============================================================================
 
 class ChessGame:
     """Контроллер для игры в шахматы"""
@@ -393,30 +364,27 @@ class ChessGame:
         self.is_game_over = False
         self.game_name = "Шахматы"
 
-    def get_valid_moves_for_piece(self, piece: Piece) -> List[Position]:
+    def get_valid_moves_for_piece(self, piece: Piece):
         """Фильтрует геометрические ходы, оставляя только легальные (без шаха)"""
         raw_moves = piece.get_possible_moves(self.board)
         valid_moves = []
         
         for target in raw_moves:
-            # Симуляция хода
             original_target = self.board.get_piece(target)
             original_pos = piece.position
             
             self.board.set_piece(target, piece)
             self.board.set_piece(original_pos, None)
             
-            # Проверяем, не остался ли свой король под шахом
             if not self.board.is_check(piece.color):
                 valid_moves.append(target)
             
-            # Отмена симуляции
             self.board.set_piece(original_pos, piece)
             self.board.set_piece(target, original_target)
             
         return valid_moves
 
-    def make_move(self, start: Position, end: Position) -> bool:
+    def make_move(self, start: Position, end: Position):
         """Пытается сделать ход, возвращает True при успехе"""
         piece = self.board.get_piece(start)
         
@@ -429,14 +397,12 @@ class ChessGame:
             print("❌ Недопустимый ход (правила или шах).")
             return False
 
-        # Фиксация хода
         captured = self.board.get_piece(end)
         move_obj = Move(piece, start, end, captured)
         
         self.board.set_piece(end, piece)
         self.board.set_piece(start, None)
         
-        # Превращение пешки в ферзя
         if isinstance(piece, Pawn):
             if (piece.color == 'white' and end[0] == 0) or \
                (piece.color == 'black' and end[0] == 7):
@@ -446,7 +412,6 @@ class ChessGame:
 
         self.history.append(move_obj)
         
-        # Проверка окончания игры
         self.current_turn = 'black' if self.current_turn == 'white' else 'white'
         
         if self.board.is_check(self.current_turn):
@@ -460,7 +425,7 @@ class ChessGame:
 
         return True
 
-    def _has_any_valid_moves(self, color: Color) -> bool:
+    def _has_any_valid_moves(self, color: Color):
         """Проверяет, есть ли у игрока цвета color хотя бы один легальный ход"""
         for r in range(8):
             for c in range(8):
@@ -493,7 +458,7 @@ class ChessGame:
         readable = [f"{chr(97 + c)}{8 - r}" for r, c in moves]
         print(f"💡 Ходы для {piece.get_symbol()}{pos}: {', '.join(readable) or 'нет'}")
 
-    def parse_input(self, text: str) -> Optional[Position]:
+    def parse_input(self, text: str):
         """Преобразует строку типа 'e2' в кортеж (6, 4)"""
         try:
             col = ord(text[0].lower()) - ord('a')
@@ -533,7 +498,6 @@ class ChessGame:
                         print("❌ Неверная координата")
                 continue
 
-            # Обработка обычного хода
             parts = cmd.split()
             if len(parts) == 2:
                 start = self.parse_input(parts[0])
@@ -556,11 +520,10 @@ class CheckersGame(ChessGame):
         self.is_game_over = False
         self.game_name = "Шашки (упрощённые)"
 
-    def get_valid_moves_for_piece(self, piece: Piece) -> List[Position]:
-        # В упрощённых шашках не проверяем "шах", только геометрия
+    def get_valid_moves_for_piece(self, piece: Piece):
         return piece.get_possible_moves(self.board)
 
-    def make_move(self, start: Position, end: Position) -> bool:
+    def make_move(self, start: Position, end: Position):
         piece = self.board.get_piece(start)
         
         if not piece or piece.color != self.current_turn:
@@ -573,21 +536,18 @@ class CheckersGame(ChessGame):
             return False
 
         captured = None
-        # Если был прыжок на 2 клетки — это взятие
         if abs(start[0] - end[0]) == 2:
             mid = ((start[0] + end[0]) // 2, (start[1] + end[1]) // 2)
             captured = self.board.get_piece(mid)
-            self.board.set_piece(mid, None)  # Убираем съеденную шашку
+            self.board.set_piece(mid, None)
 
         move_obj = Move(piece, start, end, captured)
         self.board.set_piece(end, piece)
         self.board.set_piece(start, None)
         self.history.append(move_obj)
         
-        # В упрощённой версии: нет дамок, ход всегда переходит
         self.current_turn = 'black' if self.current_turn == 'white' else 'white'
         
-        # Проверка победы (нет ходов или нет фигур)
         if not self._has_any_valid_moves(self.current_turn):
             winner = '⚪ Белые' if self.current_turn == 'black' else '⚫ Чёрные'
             print(f"🏆 ПОБЕДА! {winner} выиграли! 🏆")
@@ -602,7 +562,7 @@ class CheckersGame(ChessGame):
         
         while not self.is_game_over:
             threatened = self.board.get_threatened_positions(self.current_turn)
-            self.board.display(threatened, check_mode=False)  # Шаха в шашках нет
+            self.board.display(threatened, check_mode=False)
             print(f"➤ Ход: {'⚪ Белые' if self.current_turn == 'white' else '⚫ Чёрные'}")
             
             cmd = input("\nВаш ход > ").strip().lower()
@@ -624,10 +584,6 @@ class CheckersGame(ChessGame):
             elif cmd:
                 print("❌ Неизвестная команда")
 
-
-# =============================================================================
-# ЗАПУСК ПРОГРАММЫ
-# =============================================================================
 
 if __name__ == "__main__":
     print("\n" + "="*50)
